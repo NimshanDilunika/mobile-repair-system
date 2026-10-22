@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String         @id @default(cuid())
+  name         String
+  email        String         @unique
+  passwordHash String
+  phoneNumber  String?
+  role         String         @default("CUSTOMER") // SUPER_ADMIN | BRANCH_MANAGER | TECHNICIAN | CUSTOMER
+  branchId     String?
+  branch       ServiceCenter? @relation("BranchStaff", fields: [branchId], references: [id], onDelete: SetNull)
+
+  assignedJobs RepairTicket[] @relation("AssignedTechnician")
+  customerJobs RepairTicket[] @relation("CustomerTickets")
+  auditLogs    AuditLog[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model ServiceCenter {
+  id        String          @id @default(cuid())
+  name      String
+  code      String          @unique
+  address   String
+  contactNo String
+  staff     User[]          @relation("BranchStaff")
+  tickets   RepairTicket[]
+  inventory InventoryItem[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model RepairTicket {
+  id               String           @id @default(cuid())
+  ticketNumber     String           @unique
+  customerId       String
+  customer         User             @relation("CustomerTickets", fields: [customerId], references: [id])
+  branchId         String
+  branch           ServiceCenter    @relation(fields: [branchId], references: [id])
+  technicianId     String?
+  technician       User?            @relation("AssignedTechnician", fields: [technicianId], references: [id])
+
+  brand            String
+  deviceModel      String
+  imeiOrSerial     String
+  passcodeProvided String?
+  conditionNotes   String?
+  intakeChecklist  String           // Stored as JSON string in SQLite
+
+  status           String           @default("DRAFT_INTAKE") // DRAFT_INTAKE | PENDING_DIAGNOSIS | DIAGNOSED_AWAITING_APPROVAL | REPAIR_IN_PROGRESS | WAITING_FOR_PARTS | QUALITY_CHECK | READY_FOR_PICKUP | COMPLETED | CANCELLED
+  priority         String           @default("MEDIUM")       // LOW | MEDIUM | HIGH | URGENT
+  reportedIssue    String
+  diagnosisNotes   String?
+
+  estimatedCost    Decimal?
+  isApproved       Boolean          @default(false)
+  approvedAt       DateTime?
+
+  partsUsed        PartUsage[]
+  invoice          Invoice?
+  ticketHistory    TicketTimeline[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model InventoryItem {
+  id            String        @id @default(cuid())
+  branchId      String
+  branch        ServiceCenter @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  partName      String
+  partSku       String        @unique
+  costPrice     Decimal
+  sellingPrice  Decimal
+  stockQuantity Int           @default(0)
+  reorderLevel  Int           @default(5)
+  usages        PartUsage[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model PartUsage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  ticket    RepairTicket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  partId    String
+  part      InventoryItem @relation(fields: [partId], references: [id])
+  quantity  Int           @default(1)
+  unitPrice Decimal
+}
+
+model Invoice {
+  id            String       @id @default(cuid())
+  ticketId      String       @unique
+  ticket        RepairTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  subTotal      Decimal
+  tax           Decimal
+  discount      Decimal      @default(0)
+  totalAmount   Decimal
+  paymentStatus String       @default("UNPAID") // UNPAID | PARTIALLY_PAID | PAID | REFUNDED
+  stripeTxId    String?
+  createdAt     DateTime     @default(now())
+}
+
+model TicketTimeline {
+  id         String       @id @default(cuid())
+  ticketId   String
+  ticket     RepairTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  status     String
+  notes      String?
+  recordedBy String
+  createdAt  DateTime     @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  metadata  String?
+  createdAt DateTime @default(now())
+}
