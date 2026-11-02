@@ -20,6 +20,7 @@ model User {
   assignedJobs RepairTicket[] @relation("AssignedTechnician")
   customerJobs RepairTicket[] @relation("CustomerTickets")
   auditLogs    AuditLog[]
+  cashCloseouts DailyCashCloseout[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 }
@@ -33,6 +34,8 @@ model ServiceCenter {
   staff     User[]          @relation("BranchStaff")
   tickets   RepairTicket[]
   inventory InventoryItem[]
+
+  cashCloseouts DailyCashCloseout[]
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 }
@@ -53,6 +56,7 @@ model RepairTicket {
   passcodeProvided String?
   conditionNotes   String?
   intakeChecklist  String           // Stored as JSON string in SQLite
+  devicePhotos     String?
 
   status           String           @default("DRAFT_INTAKE") // DRAFT_INTAKE | PENDING_DIAGNOSIS | DIAGNOSED_AWAITING_APPROVAL | REPAIR_IN_PROGRESS | WAITING_FOR_PARTS | QUALITY_CHECK | READY_FOR_PICKUP | COMPLETED | CANCELLED
   priority         String           @default("MEDIUM")       // LOW | MEDIUM | HIGH | URGENT
@@ -125,4 +129,22 @@ model AuditLog {
   action    String
   metadata  String?
   createdAt DateTime @default(now())
+}
+model DailyCashCloseout {
+  id                String        @id @default(cuid())
+  branchId          String
+  branch            ServiceCenter @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  closedById        String
+  closedBy          User          @relation(fields: [closedById], references: [id])
+  closeDate         DateTime      @default(now())
+
+  systemCashTotal   Decimal       // Computed total from PAID invoices
+  actualCashTally   Decimal       // Physical cash counted in the drawer
+  cashDiscrepancy   Decimal       // actualCashTally - systemCashTotal (negative = shortage, positive = surplus)
+  cardTotal         Decimal       @default(0)
+  bankTransferTotal Decimal       @default(0)
+
+  notes             String?
+  status            String        @default("BALANCED") // BALANCED | SHORTAGE | SURPLUS
+  createdAt         DateTime      @default(now())
 }

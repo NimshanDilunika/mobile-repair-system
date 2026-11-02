@@ -30,6 +30,16 @@ export default async function TrackPage({
   return (
     <div className="min-h-screen bg-slate-900 text-white p-6 md:p-10">
       <div className="max-w-3xl mx-auto space-y-8">
+        {/* Header Bar with Back Button */}
+        <div className="flex items-center justify-between">
+          <Link
+            href="/manager"
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm border border-slate-700 transition flex items-center gap-1.5"
+          >
+            ← Back to Dashboard
+          </Link>
+        </div>
+
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Live Device Tracking</h1>
           <p className="text-slate-400 text-sm">

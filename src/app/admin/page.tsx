@@ -30,24 +30,62 @@ export default async function AdminDashboardPage() {
             </div>
             
             {/* Clean, horizontally aligned administrative quick links */}
-            <div className="flex flex-wrap items-center gap-3">
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* 1. Manage Users Card (Blue Accent) */}
               <Link
                 href="/admin/users"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold transition"
+                className="p-5 bg-blue-600/20 border border-blue-500/50 rounded-xl hover:bg-blue-600/30 transition flex flex-col justify-between group min-h-[160px]"
               >
-                👥 Manage Users
+                <div>
+                  <div className="text-2xl mb-3">👥</div>
+                  <h3 className="font-bold text-base text-blue-300 group-hover:text-blue-200">
+                    Manage Users
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                    System staff, role-based access & permissions
+                  </p>
+                </div>
+                <span className="text-right text-lg font-bold text-blue-400 group-hover:translate-x-1 transition-transform mt-3">
+                  →
+                </span>
               </Link>
+
+              {/* 2. Manage All Tickets Card */}
               <Link
                 href="/manager/tickets"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition"
+                className="p-5 bg-slate-800 border border-slate-700 rounded-xl hover:bg-slate-750 hover:border-slate-600 transition flex flex-col justify-between group min-h-[160px]"
               >
-                Manage All Tickets
+                <div>
+                  <div className="text-2xl mb-3">🎫</div>
+                  <h3 className="font-bold text-base text-slate-200 group-hover:text-white">
+                    Manage All Tickets
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                    Cross-branch repairs, status & technician workloads
+                  </p>
+                </div>
+                <span className="text-right text-lg font-bold text-slate-400 group-hover:translate-x-1 transition-transform mt-3">
+                  →
+                </span>
               </Link>
+
+              {/* 3. Branch-wise Parts & Stock Card */}
               <Link
                 href="/manager/inventory"
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold transition"
+                className="p-5 bg-slate-800 border border-slate-700 rounded-xl hover:bg-slate-750 hover:border-slate-600 transition flex flex-col justify-between group min-h-[160px]"
               >
-                Branch-wise Parts & Stock
+                <div>
+                  <div className="text-2xl mb-3">⚙️</div>
+                  <h3 className="font-bold text-base text-slate-200 group-hover:text-white">
+                    Parts & Stock
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                    Branch inventory, reorder thresholds & pricing
+                  </p>
+                </div>
+                <span className="text-right text-lg font-bold text-slate-400 group-hover:translate-x-1 transition-transform mt-3">
+                  →
+                </span>
               </Link>
             </div>
           </div>
@@ -164,21 +202,33 @@ export default async function AdminDashboardPage() {
               </div>
 
               {/* Audit Log Stream */}
+            
               <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
-                <h2 className="text-lg font-bold text-slate-200">Recent Security & Audit Logs</h2>
-                <div className="space-y-3">
-                  {data.recentAuditLogs.map((log) => (
-                    <div key={log.id} className="p-3 bg-slate-950 border border-slate-700 rounded-lg text-xs space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="font-mono text-blue-400 font-semibold">{log.action}</span>
-                        <span className="text-[10px] text-slate-500">
-                          {new Date(log.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </span>
+                <div className="flex justify-between items-center">
+                  <h2 className="text-lg font-bold text-slate-200">Recent Security & Audit Logs</h2>
+                  <span className="text-xs text-slate-400 font-mono">
+                    {data.recentAuditLogs.length} events
+                  </span>
+                </div>
+
+                {/* Scrollable list container */}
+                <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
+                  {data.recentAuditLogs.length === 0 ? (
+                    <p className="text-xs text-slate-500 italic py-4 text-center">No audit logs recorded yet.</p>
+                  ) : (
+                    data.recentAuditLogs.map((log) => (
+                      <div key={log.id} className="p-3 bg-slate-950 border border-slate-700 rounded-lg text-xs space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="font-mono text-blue-400 font-semibold">{log.action}</span>
+                          <span className="text-[10px] text-slate-500">
+                            {new Date(log.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                        <p className="text-slate-300 text-[11px]">{log.metadata || "No metadata attached"}</p>
+                        <p className="text-[10px] text-slate-500">By: {log.user.name} ({log.user.role})</p>
                       </div>
-                      <p className="text-slate-300 text-[11px]">{log.metadata || "No metadata attached"}</p>
-                      <p className="text-[10px] text-slate-500">By: {log.user.name} ({log.user.role})</p>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </div>

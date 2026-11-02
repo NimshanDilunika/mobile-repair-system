@@ -102,7 +102,6 @@ export async function cancelTicketByManager(
         data: { status: "CANCELLED" },
       });
 
-      // Fixed: tx.ticketTimeline instead of tx.ticketHistory, recordedBy instead of changedBy
       await tx.ticketTimeline.create({
         data: {
           ticketId,
@@ -159,6 +158,9 @@ export async function createRepairTicket(
 
   const reportedIssue = formData.get("reportedIssue") as string;
   const conditionNotes = (formData.get("conditionNotes") as string) || "";
+
+  // Extract device photos JSON string
+  const devicePhotos = (formData.get("devicePhotos") as string) || "[]";
 
   if (!customerName || !customerEmail || !brand || !deviceModel || !imeiOrSerial || !reportedIssue) {
     return { error: "Please complete all mandatory fields marked with an asterisk (*)." };
@@ -217,16 +219,21 @@ export async function createRepairTicket(
           priority,
           reportedIssue,
           intakeChecklist,
+          devicePhotos, // Saved into Prisma database
           status: "PENDING_DIAGNOSIS",
         },
       });
 
-      // Fixed: tx.ticketTimeline instead of tx.ticketHistory, recordedBy instead of changedBy
+      let photoCount = 0;
+      try {
+        photoCount = JSON.parse(devicePhotos).length;
+      } catch (_) {}
+
       await tx.ticketTimeline.create({
         data: {
           ticketId: ticket.id,
           status: "PENDING_DIAGNOSIS",
-          notes: `Device accepted at intake. Issue reported: ${reportedIssue}`,
+          notes: `Device accepted at intake. Issue: ${reportedIssue}. Photos attached: ${photoCount}`,
           recordedBy: session.user.name || "Intake Staff",
         },
       });
@@ -235,7 +242,7 @@ export async function createRepairTicket(
         data: {
           userId: session.user.id,
           action: "TICKET_CREATED",
-          metadata: `Created ticket ${ticketNumber} for ${brand} ${deviceModel}`,
+          metadata: `Created ticket ${ticketNumber} for ${brand} ${deviceModel} (${photoCount} photos)`,
         },
       });
 

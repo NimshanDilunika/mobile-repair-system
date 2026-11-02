@@ -1,11 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState, useActionState } from "react";
+import IntakePhotoUploader from "@/components/IntakePhotoUploader";
 import { createRepairTicket } from "@/app/actions/ticket";
 import Link from "next/link";
 
 export default function NewTicketPage() {
   const [state, formAction, isPending] = useActionState(createRepairTicket, null);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
   return (
     <div className="min-h-screen bg-slate-900 text-white p-6 md:p-10">
@@ -16,10 +18,10 @@ export default function NewTicketPage() {
             <p className="text-slate-400 text-sm">Register incoming device and print tracking ticket</p>
           </div>
           <Link
-            href="/manager"
+            href="/manager/tickets"
             className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm border border-slate-700 transition"
           >
-            ← Back to Dashboard
+            ← Back to Queue
           </Link>
         </div>
 
@@ -42,6 +44,9 @@ export default function NewTicketPage() {
         )}
 
         <form action={formAction} className="space-y-6">
+          {/* Hidden input to pass uploaded photos array as JSON string */}
+          <input type="hidden" name="devicePhotos" value={JSON.stringify(photoUrls)} />
+
           {/* Customer Details */}
           <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
             <h2 className="text-lg font-semibold text-blue-400 mb-4">1. Customer Information</h2>
@@ -135,10 +140,10 @@ export default function NewTicketPage() {
           </div>
 
           {/* Condition & Checklist */}
-          <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-            <h2 className="text-lg font-semibold text-blue-400 mb-4">3. Condition & Checklist</h2>
+          <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+            <h2 className="text-lg font-semibold text-blue-400">3. Condition & Checklist</h2>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               {[
                 { name: "powersOn", label: "Powers On" },
                 { name: "touchFunctional", label: "Touch Screen OK" },
@@ -171,6 +176,11 @@ export default function NewTicketPage() {
                   placeholder="Scratches on frame, missing SIM tray, hairline crack on rear glass"
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-sm focus:outline-none focus:border-blue-500"
                 />
+              </div>
+
+              {/* Photos Uploader */}
+              <div className="pt-2">
+                <IntakePhotoUploader onPhotosChange={setPhotoUrls} />
               </div>
             </div>
           </div>

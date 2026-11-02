@@ -53,3 +53,7 @@ next-env.d.ts
 .vscode/
 .idea/
 *.swp
+
+# Intake condition photo uploads
+/public/uploads/*
+!/public/uploads/.gitkeep
